@@ -9,6 +9,11 @@ aerial_material = 'cu'  # Aerial material (cu, rg-62, rg-213)
 
 # DO NOT CHANGE ANYTHING FROM HERE DOWN #
 
+
+# Shortcut for outputting messages
+def println(msg):
+    FreeCAD.Console.PrintMessage(msg + "\r\n")
+
 # Constants
 C = 299.792  # m/sec
 
@@ -49,10 +54,12 @@ else:
 p1 = (mast_dia / 2.0, 0.0)   # Loop connection point with mast #1
 p2 = (0, aerial_dia)         # The top of the aerial loop
 p3 = (-mast_dia / 2.0, 0.0)  # Loop connection point with mast #2
-aerial1 = cq.Workplane('XY').center(p1[0], p1[1]).threePointArc(p2, p3)
+aerial1 = cq.Workplane('XZ').center(p1[0], p1[1]).threePointArc(p2, p3)
+aerial2 = cq.Workplane('YZ').center(p1[0], p1[1]).threePointArc(p2, p3)
 
 # Output some of the dimensions that we have calculated
-FreeCAD.Console.PrintMessage("Aerial length: " + str(aerial_len) + " m \r\n")
-FreeCAD.Console.PrintMessage("Aerial length: " + str(aerial_dia) + " m \r\n")
+println("Aerial length: " + str(round(aerial_len, 5)) + " m")
+println("Aerial diameter: " + str(round(aerial_dia, 5)) + " m")
 
 show(aerial1)
+show(aerial2)
