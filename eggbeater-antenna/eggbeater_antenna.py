@@ -15,7 +15,7 @@ def println(msg):
     FreeCAD.Console.PrintMessage(msg + "\r\n")
 
 # Constants
-C = 299.792  # m/sec
+C = 299.792  # speed of light (m/sec)
 
 # Derived variables
 vac_wl = C / freq        # wavelength in a vacuum (m)
@@ -50,16 +50,32 @@ elif freq > 120.0 and freq < 500:
 else:
     mast_dia = 0.01905  # 3/4" dia
 
-# Figure out the points for our loop to go through
-p1 = (mast_dia / 2.0, 0.0)   # Loop connection point with mast #1
+# TODO: Figure out why the aerials won't center around the origin
+# Figure out the points for our loop to go through, this defines the sweep path
+p1 = (mast_dia / 2.0, 0.0)   # Loop connection point #1 with mast
 p2 = (0, aerial_dia)         # The top of the aerial loop
-p3 = (-mast_dia / 2.0, 0.0)  # Loop connection point with mast #2
-aerial1 = cq.Workplane('XZ').center(p1[0], p1[1]).threePointArc(p2, p3)
-aerial2 = cq.Workplane('YZ').center(p1[0], p1[1]).threePointArc(p2, p3)
+p3 = (-mast_dia / 2.0, 0.0)  # Loop connection point #2 with mast
+aerial_path1 = cq.Workplane('XZ').center(p1[0], p1[1]).threePointArc(p2, p3)
+aerial_path2 = cq.Workplane('YZ').center(p1[0], p1[1]).threePointArc(p2, p3)
+
+# TODO: Base the shape and dimensions of the cross sections off the frequency
+# Set up the sections for our sweep
+# aerial_sec1 = cq.Workplane('YZ').circle(0.00162814).translate((p1[0], 0, -0.0007)).rotate((0, 0, 0), (0, 1, 0), -5)
+aerial_sec1 = cq.Workplane('YZ').circle(0.00162814).translate((p1[0], 0, 0))
+aerial_sec2 = cq.Workplane('XZ').circle(0.00162814).translate((0, p1[0], 0))
+
+# Do the sweeps
+aerial_sweep1 = aerial_sec1.sweep(aerial_path1)
+aerial_sweep2 = aerial_sec2.sweep(aerial_path2)
 
 # Output some of the dimensions that we have calculated
 println("Aerial length: " + str(round(aerial_len, 5)) + " m")
 println("Aerial diameter: " + str(round(aerial_dia, 5)) + " m")
 
-show(aerial1)
-show(aerial2)
+# Render everything
+show(aerial_path1)
+show(aerial_path2)
+show(aerial_sec1)
+show(aerial_sec2)
+show(aerial_sweep1)
+show(aerial_sweep2)
