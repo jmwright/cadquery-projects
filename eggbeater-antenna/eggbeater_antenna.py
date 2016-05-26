@@ -19,9 +19,9 @@ def println(msg):
     FreeCAD.Console.PrintMessage(msg + "\r\n")
 
 # CONSTANTS #
-C = 299.792 * ureg['meter/second']  # speed of light
-PI = math.pi                        # The 3.14 pi
-ROM14DIA = 0.00162814 * ureg.meter  # Diameter of 14 ga Romex
+C = 299.792 * ureg['megameter/sec']  # speed of light
+PI = math.pi                         # The 3.14 pi
+ROM14DIA = 0.00162814 * ureg.meter   # Diameter of 14 ga Romex
 
 # Wavelength in a vacuum based on the given frequency
 vac_wl = C / freq
