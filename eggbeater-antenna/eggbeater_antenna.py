@@ -1,81 +1,89 @@
 import math
 import FreeCAD
+import pint
 import cadquery as cq
 from Helpers import show
 
-# Driving parameter
-freq = 145.8  # MHz
-aerial_material = 'cu'  # Aerial material (cu, rg-62, rg-213)
+# Units handling
+ureg = pint.UnitRegistry()
 
-# DO NOT CHANGE ANYTHING FROM HERE DOWN #
+# ################################################### #
+# THIS IS THE ONLY VARIALBE YOU SHOULD HAVE TO CHANGE #
+# BE SURE NOT TO REMOVE THE UNITS                     #
+# ################################################### #
+freq = 145.8 * ureg.MHz  # Receive frequency
 
 
 # Shortcut for outputting messages
 def println(msg):
     FreeCAD.Console.PrintMessage(msg + "\r\n")
 
-# Constants
-C = 299.792  # speed of light (m/sec)
+# CONSTANTS #
+C = 299.792 * ureg['meter/second']  # speed of light
+PI = math.pi                        # The 3.14 pi
+ROM14DIA = 0.00162814 * ureg.meter  # Diameter of 14 ga Romex
 
-# Derived variables
-vac_wl = C / freq        # wavelength in a vacuum (m)
-cu_wl = vac_wl * 0.93          # wavelength in copper (m)
-rg62_wl = vac_wl * 0.83        # wavelength in RG-62 (m)
-rg213_wl = vac_wl * 0.66       # wavelength in RG-213 (m)
+# Wavelength in a vacuum based on the given frequency
+vac_wl = C / freq
 
-# Our material affects the wave velocity and thus the dimensions
+# Our material affects the wave velocity and thus the dimensions of the
+# aerials and ground plane
 wavelength = None
-if aerial_material == "cu":
-    wavelength = cu_wl
-elif aerial_material == "rg-62":
-    wavelength = rg62_wl
-elif aerial_material == "rg-213":
-    wavelength = rg213_wl
+if freq >= 600.0 * ureg.MHz and freq <= 1000.0 * ureg.MHz:
+    wavelength = vac_wl * 0.93  # wavelength in copper
+elif freq >= 300.0 * ureg.MHz and freq < 600.0 * ureg.MHz:
+    wavelength = vac_wl * 0.83  # wavelength in RG-62
+elif freq >= 30.0 * ureg.MHz and freq < 300.0 * ureg.MHz:
+    wavelength = vac_wl * 0.66  # wavelength in RG-213
 else:
-    wavelength = cu_wl
+    wavelength = vac_wl * 0.93  # wavelength in copper
 
-# Relationships
-aerial_len = (1005 / (C / wavelength)) * 0.3048  # Aerial length (m)
-aerial_dia = aerial_len / math.pi  # The resulting diameter of the aerials
-gp_dia = 2.0 * aerial_dia        # Ground plane dia = 2x aerial dia
-gp_aerial_centers = 0.125 * wavelength     # Distance between center of aerials and ground plane (m)
-base_dia = gp_dia / 2.0                    # The diameter of the antenna base
+# Aerial length - Pint does not understand the MHz to meters conversion
+aerial_len = (1005 / (C.magnitude / wavelength.magnitude)) * ureg.feet
+aerial_len = aerial_len.to(ureg.meter)
+aerial_dia = aerial_len / PI  # Loop diameter based on aerial length
 
-# Figure out the body tube size
+# TODO: Figure out what the proper ground plane diameter is for the frequency
+gp_dia = 2.0 * aerial_dia
+# Distance between center of aerials and ground plane
+gp_aerial_centers = 0.125 * wavelength
+
+# Figure out the mast size
 mast_dia = None  # Body tube diameter (m)
-if freq < 120.0:
-    mast_dia = 0.0508  # 2" dia
-elif freq > 120.0 and freq < 500:
-    mast_dia = 0.0381  # 1-1/2" dia
+if freq < 120.0 * ureg.MHz:
+    mast_dia = 0.0508 * ureg.meter                          # 2" dia
+elif freq > 120.0 * ureg.MHz and freq < 500 * ureg.MHz:
+    mast_dia = 0.0381 * ureg.meter                          # 1-1/2" dia
 else:
-    mast_dia = 0.01905  # 3/4" dia
+    mast_dia = 0.01905 * ureg.meter                         # 3/4" dia
 
-# TODO: Figure out why the aerials won't center around the origin
 # Figure out the points for our loop to go through, this defines the sweep path
-p1 = (mast_dia / 2.0, 0.0)   # Loop connection point #1 with mast
-p2 = (0, aerial_dia)         # The top of the aerial loop
-p3 = (-mast_dia / 2.0, 0.0)  # Loop connection point #2 with mast
+p1 = (0.0, 0.0)                          # Loop connection point #1 with mast
+p2 = (0.0, aerial_dia.to(ureg.mm).magnitude)  # The top of the aerial loop
+p2o = (0.0, p2[1] + 5.0)  # Cheat a little of offset the loops at the top
+p3 = (mast_dia.to(ureg.mm).magnitude, 0.0)  # Loop connection point #2 w/ mast
 aerial_path1 = cq.Workplane('XZ').center(p1[0], p1[1]).threePointArc(p2, p3)
-aerial_path2 = cq.Workplane('YZ').center(p1[0], p1[1]).threePointArc(p2, p3)
+aerial_path2 = cq.Workplane('YZ').center(p1[0], p1[1]).threePointArc(p2o, p3)
 
 # TODO: Base the shape and dimensions of the cross sections off the frequency
 # Set up the sections for our sweep
-# aerial_sec1 = cq.Workplane('YZ').circle(0.00162814).translate((p1[0], 0, -0.0007)).rotate((0, 0, 0), (0, 1, 0), -5)
-aerial_sec1 = cq.Workplane('YZ').circle(0.00162814).translate((p1[0], 0, 0))
-aerial_sec2 = cq.Workplane('XZ').circle(0.00162814).translate((0, p1[0], 0))
+aerial_sec1 = cq.Workplane('YZ').circle(ROM14DIA.to(ureg.mm).magnitude)
+aerial_sec2 = cq.Workplane('XZ').circle(ROM14DIA.to(ureg.mm).magnitude)
 
-# Do the sweeps
-aerial_sweep1 = aerial_sec1.sweep(aerial_path1)
-aerial_sweep2 = aerial_sec2.sweep(aerial_path2)
+# Do the sweeps and translate because freecad does not handle offset arc paths
+aerial_sweep1 = aerial_sec1.sweep(aerial_path1)\
+    .translate((-mast_dia.to(ureg.mm).magnitude / 2.0, 0.0, 0.0))
+aerial_sweep2 = aerial_sec2.sweep(aerial_path2)\
+    .translate((0.0, -mast_dia.to(ureg.mm).magnitude / 2.0, 0.0))
 
 # Output some of the dimensions that we have calculated
-println("Aerial length: " + str(round(aerial_len, 5)) + " m")
-println("Aerial diameter: " + str(round(aerial_dia, 5)) + " m")
+println("Aerial length: {0}".format(aerial_len.to(ureg.mm)))
+println("Aerial diameter: {0}".format(aerial_dia.to(ureg.mm)))
 
 # Render everything
-show(aerial_path1)
-show(aerial_path2)
-show(aerial_sec1)
-show(aerial_sec2)
+# show(aerial_path1)
+# show(aerial_path2)
+# show(aerial_sec1)
+# show(aerial_sec2)
 show(aerial_sweep1)
 show(aerial_sweep2)
