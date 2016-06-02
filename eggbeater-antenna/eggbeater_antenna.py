@@ -25,13 +25,18 @@ def createSMConnector():
         .edges('|Z').fillet(width / 2.001)\
         .edges('|X').fillet(0.5)\
         .faces('>Z').workplane().center(length / 2.0 - width / 2.0, 0.0)\
-        .circle(width / 2.0).extrude(7.0)\
+        .circle(width / 2.0).circle(4.6 / 2.0).extrude(7.0)\
         .edges('>Z').fillet(0.2)
 
-    # Put the holes in the terminal
+    # Put the top holes in the terminal
     term = term.faces('<Z').workplane()\
         .center(-length / 2.0 + width / 2.0, 0.0)\
         .circle(5.25 / 2.0).cutThruAll()
+
+    # Put the side hole in that accepts the wire
+    hole = cq.Workplane('YZ').center(0.0, 5.7 - thickness).circle(4.25 / 2.0)\
+             .extrude(length / 2.0)
+    term = term.cut(hole)
 
     return term
 
