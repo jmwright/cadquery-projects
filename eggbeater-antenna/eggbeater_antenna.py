@@ -11,7 +11,51 @@ ureg = pint.UnitRegistry()
 # THIS IS THE ONLY VARIALBE YOU SHOULD HAVE TO CHANGE #
 # BE SURE NOT TO REMOVE THE UNITS                     #
 # ################################################### #
-freq = 145.8 * ureg.MHz  # Receive frequency
+# freq = 145.8 * ureg.MHz  # Receive frequency
+freq = 915.0 * ureg.MHz  # Receive frequency
+
+
+def createSMConnector():
+    length = 20.66
+    width = 9.5
+    thickness = 2.19
+
+    # Create the basic shape of the terminal
+    term = cq.Workplane('XY').box(length, width, thickness)\
+        .edges('|Z').fillet(width / 2.001)\
+        .edges('|X').fillet(0.5)\
+        .faces('>Z').workplane().center(length / 2.0 - width / 2.0, 0.0)\
+        .circle(width / 2.0).extrude(7.0)\
+        .edges('>Z').fillet(0.2)
+
+    # Put the holes in the terminal
+    term = term.faces('<Z').workplane()\
+        .center(-length / 2.0 + width / 2.0, 0.0)\
+        .circle(5.25 / 2.0).cutThruAll()
+
+    return term
+
+
+def createMDConnector():
+    # Implement this properly
+    return cq.Workplane('XY').box(2, 2, 2)
+
+
+def createLGConnector():
+    # Implement this properly
+    return cq.Workplane('XY').box(3, 3, 3)
+
+
+def createConnector(frequency):
+    if freq >= 600.0 * ureg.MHz and freq <= 1000.0 * ureg.MHz:
+        return createSMConnector()
+    elif freq >= 300.0 * ureg.MHz and freq < 600.0 * ureg.MHz:
+        return createMDConnector()
+    elif freq >= 30.0 * ureg.MHz and freq < 300.0 * ureg.MHz:
+        return createLGConnector()
+    else:
+        FreeCAD.Console.PrintError(frequency + " is not valid for this design.")
+        return None
 
 
 # Shortcut for outputting messages
@@ -80,6 +124,9 @@ aerial_sweep2 = aerial_sec2.sweep(aerial_path2)\
 println("Aerial length: {0}".format(aerial_len.to(ureg.mm)))
 println("Aerial diameter: {0}".format(aerial_dia.to(ureg.mm)))
 
+# Generate the aerial connectors for the frequency we are at
+term1 = createConnector(freq)
+
 # Render everything
 # show(aerial_path1)
 # show(aerial_path2)
@@ -87,3 +134,4 @@ println("Aerial diameter: {0}".format(aerial_dia.to(ureg.mm)))
 # show(aerial_sec2)
 show(aerial_sweep1)
 show(aerial_sweep2)
+show(term1)
