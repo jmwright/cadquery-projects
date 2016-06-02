@@ -5,6 +5,9 @@ This script takes a word or name in English and translates it to a 3D version of
 This script uses the simplified Aurebesh alphabet, but could also be expanded to include combined characters from the extended alphabet including 'Ch'.
 
 ![CadQuery in 3D Aurebesh](images/CadQuery_In_Aurebesh.png)
+<p align = "center">
+<em>Caption: Converting the string 'cadquery' into 3D Aurebesh.</em>
+</p>
 
 ![Star Wars Wikia Auerbesh Image](http://vignette4.wikia.nocookie.net/starwars/images/7/7d/Crane_Aurebesh_sheet.jpg/revision/latest?cb=20141030183749)
 
