@@ -63,6 +63,31 @@ def createConnector(frequency):
         return None
 
 
+def pvcEndCap():
+    od = 76.2
+    id = 63.5
+    len = od / 2.0
+    holeDp = len - 10.0
+
+    cap = cq.Workplane('XY').circle(od / 2.0).extrude(len)\
+        .edges('>Z').fillet(3.0).edges('<Z').chamfer(3.0)
+    hole = cq.Workplane('XY').circle(id / 2.0).extrude(holeDp)
+
+    cap = cap.cut(hole)
+
+    return cap
+
+
+# TODO: Change this so that only the frequency is needed
+def groundPlane(frequency, gp_dia):
+    thickness = 5.0
+
+    plane = cq.Workplane('XY').circle(gp_dia / 2.0).extrude(thickness)\
+        .edges().fillet(thickness / 2.1)
+
+    return plane
+
+
 # Shortcut for outputting messages
 def println(msg):
     FreeCAD.Console.PrintMessage(msg + "\r\n")
@@ -71,6 +96,7 @@ def println(msg):
 C = 299.792 * ureg['megameter/sec']  # speed of light
 PI = math.pi                         # The 3.14 pi
 ROM14DIA = 0.00162814 * ureg.meter   # Diameter of 14 ga Romex
+termColor = (184, 115, 51, 0.0)      # The color of the aerial terminals
 
 # Wavelength in a vacuum based on the given frequency
 vac_wl = C / freq
@@ -93,9 +119,9 @@ aerial_len = aerial_len.to(ureg.meter)
 aerial_dia = aerial_len / PI  # Loop diameter based on aerial length
 
 # TODO: Figure out what the proper ground plane diameter is for the frequency
-gp_dia = 2.0 * aerial_dia
+gp_dia = wavelength / 2.0
 # Distance between center of aerials and ground plane
-gp_aerial_centers = 0.125 * wavelength
+gp_aerial_centers = wavelength / 8.0
 
 # Figure out the mast size
 mast_dia = None  # Body tube diameter (m)
@@ -130,7 +156,19 @@ println("Aerial length: {0}".format(aerial_len.to(ureg.mm)))
 println("Aerial diameter: {0}".format(aerial_dia.to(ureg.mm)))
 
 # Generate the aerial connectors for the frequency we are at
-term1 = createConnector(freq)
+term1 = createConnector(freq).rotate((0, 0, 0), (0, 0, 1), 180)\
+            .translate((15.0, 0.0, -2.5))
+term2 = createConnector(freq).translate((-15.0, 0.0, -2.5))
+term3 = createConnector(freq).rotate((0, 0, 0), (0, 0, 1), 90)\
+            .translate((0.0, -15.0, -2.5))
+term4 = createConnector(freq).rotate((0, 0, 0), (0, 0, 1), 270)\
+            .translate((0.0, 15.0, -2.5))
+
+base = pvcEndCap().translate((0.0, 0.0, -76.2 / 2.0 - 3.0))
+
+# TODO: Do the units right
+plane = groundPlane(freq, gp_dia.to(ureg.mm).magnitude)\
+            .translate((0.0, 0.0, -gp_aerial_centers.to(ureg.mm).magnitude))
 
 # Render everything
 # show(aerial_path1)
@@ -139,4 +177,9 @@ term1 = createConnector(freq)
 # show(aerial_sec2)
 show(aerial_sweep1)
 show(aerial_sweep2)
-show(term1)
+show(term1, termColor)
+show(term2, termColor)
+show(term3, termColor)
+show(term4, termColor)
+show(base, (255, 255, 255, 0.0))
+show(plane)
