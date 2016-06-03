@@ -1,4 +1,11 @@
+## Eggbeater Antenna
+
 This is a parametric script intended to generate an eggbeater antenna based solely on the frequency.
+
+![Eggbeater Antenna Model](images/roughted_in_aerials_and_ground_plane.png)
+<p>
+<em>Caption: The roughed-in eggbeater model showing aerials and ground plane</em>
+</p>
 
 ![Mach 30 Ground Sphere Antenna](http://opendesignengine.net/dmsf_files/492?download=)
 
