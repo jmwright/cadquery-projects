@@ -118,7 +118,7 @@ aerial_len = (1005 / (C.magnitude / wavelength.magnitude)) * ureg.feet
 aerial_len = aerial_len.to(ureg.meter)
 aerial_dia = aerial_len / PI  # Loop diameter based on aerial length
 
-# TODO: Figure out what the proper ground plane diameter is for the frequency
+# Figure out what the proper ground plane diameter is for the frequency
 gp_dia = wavelength / 2.0
 # Distance between center of aerials and ground plane
 gp_aerial_centers = wavelength / 8.0
