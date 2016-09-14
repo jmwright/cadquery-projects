@@ -1,3 +1,5 @@
+# Unit test for the FEM module
+
 # ***************************************************************************
 # *   Copyright (c) 2015 - FreeCAD Developers                               *
 # *   Author: Przemo Firszt <przemo@firszt.eu>                              *
@@ -274,11 +276,12 @@ def create_cube_test_results():
     FreeCAD.open(cube_file)
     import FemGui
     FemGui.setActiveAnalysis(FreeCAD.ActiveDocument.MechanicalAnalysis)
-    import FemToolsCcx
-    fea = FemToolsCcx.FemToolsCcx()
+    import FemTools
+    fea = FemTools.FemTools()
 
     # static
     fea.reset_all()
+    fea.set_analysis_type('static')
     fea.run()
 
     fea.load_results()
