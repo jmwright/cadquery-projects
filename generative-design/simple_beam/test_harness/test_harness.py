@@ -4,12 +4,17 @@ import FemToolsCcx
 import FemAnalysis
 import FemSolverCalculix
 import MechanicalMaterial
-# import Part
+import cadquery as cq
+
+
+def PrintError(message):
+    FreeCAD.Console.PrintError("FEM Error: {}".format(message))
 
 doc = FreeCAD.ActiveDocument
 
-# box = Part.makeBox(10, 10, 10)
-box_obj = doc.addObject('Part::Box', 'Box')
+box = cq.Workplane("XY").box(10, 10, 10).val().wrapped
+newFeature = doc.addObject('Part::Feature', 'Box')
+newFeature.Shape = box
 
 FemAnalysis.makeFemAnalysis('Analysis')
 FemGui.setActiveAnalysis(FreeCAD.ActiveDocument.Analysis)
@@ -64,4 +69,4 @@ if not message:
     fea.run()
     fea.load_results()
 else:
-    print("Houston, we have a problem! {}".format(message))
+    PrintError(message)
