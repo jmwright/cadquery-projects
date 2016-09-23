@@ -4,11 +4,11 @@ import FemToolsCcx
 import FemAnalysis
 import FemSolverCalculix
 import MechanicalMaterial
-import Part
+# import Part
 
 doc = FreeCAD.ActiveDocument
 
-box = Part.makeBox(10, 10, 10)
+# box = Part.makeBox(10, 10, 10)
 box_obj = doc.addObject('Part::Box', 'Box')
 
 FemAnalysis.makeFemAnalysis('Analysis')
