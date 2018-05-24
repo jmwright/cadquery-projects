@@ -3,7 +3,7 @@ import cadquery as cq
 # All dimensions are in millimeters
 
 # Sets the pitch of the header pin spacing
-pin_spacing = 3.0
+pin_spacing = 2.54
 
 # Individual header pin dimensions
 pin_width = 0.63
